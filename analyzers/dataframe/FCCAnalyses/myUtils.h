@@ -442,6 +442,17 @@ namespace myUtils{
 
   int has_anglethrust_emin(ROOT::VecOps::RVec<float> angle);
 
+  ROOT::VecOps::RVec<TLorentzVector> VisGenP4(ROOT::RVec<Int_t> subset_indices, ROOT::RVec<edm4hep::MCParticleData> particles, ROOT::RVec<Int_t> daughter_indices, bool printIt); 
+  ROOT::VecOps::RVec< edm4hep::ReconstructedParticleData> MakePi0Test(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> recop, double DRMAX_);
+  ROOT::VecOps::RVec< edm4hep::ReconstructedParticleData> SortByIso(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> recop);
+  ROOT::VecOps::RVec< edm4hep::ReconstructedParticleData> TauRecoTest(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> recop,
+           ROOT::VecOps::RVec<int> recind,
+           ROOT::VecOps::RVec<int> mcind,
+           ROOT::VecOps::RVec<edm4hep::MCParticleData> mc,
+          ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> pi0s
+           );
+
+
 }//end NS myUtils
 
 }//end NS FCCAnalyses

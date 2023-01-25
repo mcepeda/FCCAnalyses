@@ -2587,6 +2587,294 @@ int has_anglethrust_emin(ROOT::VecOps::RVec<float> angle){
   return -1;
 }
 
+
+ROOT::VecOps::RVec<TLorentzVector> VisGenP4(ROOT::RVec<Int_t> subset_indices, ROOT::RVec<edm4hep::MCParticleData> particles, ROOT::RVec<Int_t> daughter_indices, bool printIt=false) {
+        ROOT::VecOps::RVec<TLorentzVector> VisColl;
+
+        unsigned int nsel = subset_indices.size();
+
+        for (unsigned int i=0; i<nsel; ++i) {
+
+            bool parent_found = false;
+            unsigned int index = subset_indices[i];
+
+            TLorentzVector VisTau(0,0,0,0);
+
+            if (abs(particles.at(index).PDG) != 15) { 
+                VisColl.push_back(VisTau); continue;} // Why are you even here?
+
+            int db = particles.at(index).daughters_begin ;
+            int de = particles.at(index).daughters_end;
+
+            TLorentzVector  partM(particles.at(index).momentum.x,particles.at(index).momentum.y,particles.at(index).momentum.z,particles.at(index).mass);
+
+            for (int id = db; id < de; id++) {                    
+    
+                       if( abs(particles.at(daughter_indices.at(id)).PDG) == 15 ) continue; //  Careful, if this happens, I should not be here          
+                       if( abs(particles.at(daughter_indices.at(id)).PDG) >=11 && abs(particles.at(daughter_indices.at(id)).PDG) <=16 ) continue; //    Maybe I should go deeper...     
+
+                       TLorentzVector part;
+                        part.SetXYZM(particles.at(daughter_indices[id]).momentum.x,particles.at(daughter_indices[id]).momentum.y,particles.at(daughter_indices[id]).momentum.z,particles.at(daughter_indices[id]).mass);
+                
+                       VisTau+=part;
+
+                   }        
+
+            VisColl.push_back(VisTau);
+
+        }
+        if (printIt) printf("\\n");
+        return VisColl;
+}
+
+ROOT::VecOps::RVec< edm4hep::ReconstructedParticleData> MakePi0Test(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> recop, double DRMAX_=0.5){
+
+           ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> collection;
+            
+           // They are not ordered by Pt! They should be...
+           for (size_t i = 0; i < recop.size(); ++i) {
+
+           // Some cleaning, I cannot see anything otherwise:
+           if (  sqrt ( recop.at(i).momentum.x*recop.at(i).momentum.x + recop.at(i).momentum.y * recop.at(i).momentum.y ) <0.5 ) continue;
+
+           // Double Check  
+           if ( recop.at(i).charge != 0) continue;  
+
+           TLorentzVector tlvSeed;
+           tlvSeed.SetXYZM(recop.at(i).momentum.x,  recop.at(i).momentum.y,  recop.at(i).momentum.z, 0);
+
+           // Lets find the closest photon around it
+           int phSecond=i;
+
+           double dRMax=DRMAX_;
+           double bestMass=0.3;
+
+           for (size_t j = i+1; j < recop.size(); ++j) {        
+                   if ( recop.at(j).charge != 0) continue;
+                  
+                   TLorentzVector findP;    
+                   findP.SetXYZM(recop.at(j).momentum.x, recop.at(j).momentum.y,recop.at(j).momentum.z, recop.at(j).mass);
+      
+//                 if (findP.Pt()<0.5) continue; 
+ 
+                   TLorentzVector testComb=findP+tlvSeed;
+                   double testMass=testComb.M();                
+ 
+                   // Check Angle. By Hand, better do it with a nice function.
+                   double DTheta = findP.Theta()-tlvSeed.Theta();
+                   double DPhi = findP.Phi() - tlvSeed.Phi();
+                   if (DPhi>M_PI) DPhi=2*M_PI-DPhi;
+                   double DR= sqrt(DTheta*DTheta+DPhi*DPhi);
+
+                   if (DR>dRMax) continue ; // How collimated are the decay products? 
+                   if (fabs( (findP+tlvSeed ).M()-0.135)>bestMass) continue;
+                   dRMax=DR; bestMass=(findP+tlvSeed ).M();
+
+                   phSecond=j;
+                
+          }
+
+          if (phSecond==i || dRMax>=0.5 || fabs(bestMass-0.135)>=0.1) continue;
+
+          TLorentzVector foundP;
+
+          foundP.SetXYZM(recop.at(phSecond).momentum.x, recop.at(phSecond).momentum.y,recop.at(phSecond).momentum.z, recop.at(phSecond).mass);
+          TLorentzVector Comb=tlvSeed+foundP;
+
+          edm4hep::ReconstructedParticleData partMod; // =recop.at(recind.at(i));
+          partMod.momentum.x=Comb.Px();
+          partMod.momentum.y=Comb.Py();
+          partMod.momentum.z=Comb.Pz();
+          partMod.mass= Comb.M(); 
+          partMod.charge= 0;
+          partMod.type = 0;
+
+          collection.push_back(partMod);        
+
+//          std::cout<<" Pion? ----> DR:" <<dRMax<<"  M:"<<Comb.M()<<"    "<<Comb.Pt()<<"   "<<Comb.Phi()<<"  "<<Comb.Eta()<<"   "<<partMod.mass<<"    "<<partMod.charge<<"  "<<std::endl;
+//           std::cout<<"SEED                   "<<i<<"   "<<tlvSeed.Pt()<<"  "<<tlvSeed.Phi()<<"   "<<tlvSeed.Eta()<< "  "<<recop.at(i).charge<<std::endl;
+
+           TLorentzVector foundPART;    
+            foundPART.SetXYZM(recop.at(phSecond).momentum.x,   recop.at(phSecond).momentum.y, recop.at(phSecond).momentum.z,   recop.at(phSecond).mass);
+//            std::cout<<" Added! :              "<<phSecond<<"   "<<foundPART.Pt()<<"    "<<foundPART.Phi()<<"   "<<foundPART.Eta()<<"   "<< recop.at(phSecond).charge<<std::endl;
+
+
+           }
+
+           return collection ;
+}
+  
+ 
+ROOT::VecOps::RVec< edm4hep::ReconstructedParticleData> TauRecoTest(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> recop,
+           ROOT::VecOps::RVec<int> recind,
+           ROOT::VecOps::RVec<int> mcind,
+           ROOT::VecOps::RVec<edm4hep::MCParticleData> mc,
+          ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> pi0s
+           ){
+
+           ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> collection;
+            
+           int n_piplus=0, n_piminus=0, n_pi0, n_photons=0;
+
+
+           // They are not ordered by Pt! They should be...
+
+           for (size_t i = 0; i < recind.size(); i++) {
+           // Some cleaning, I cannot see anything otherwise:
+           if (  sqrt ( recop.at(recind.at(i)).momentum.x*recop.at(recind.at(i)).momentum.x + recop.at(recind.at(i)).momentum.y * recop.at(recind.at(i)).momentum.y ) <1 ) continue;
+
+           // This should be done in a better way, not looking at PDGID
+           if ( fabs(mc.at(mcind.at(i)).PDG)==11 || fabs(mc.at(mcind.at(i)).PDG)==13 ) continue;
+
+           // Only charged hadrons 
+           if ( recop.at(recind.at(i)).charge == 0) continue;  
+
+           // Im assuming everything is a pion (this is already done in the ntuple, but
+           // there are some strange cases where the mass is not set properly?
+           double masa = 0.13957039;
+           TLorentzVector tlvSeed;
+           tlvSeed.SetXYZM(recop.at(recind.at(i)).momentum.x,  recop.at(recind.at(i)).momentum.y, recop.at(recind.at(i)).momentum.z, masa);
+
+           int countPhotons=0; // Eventually improve this to look for DiPhotons compatible with a Pi0
+           int countPiPlus=0;
+           int countPiMinus=0;
+           int countPions=0; 
+
+           if (recop.at(recind.at(i)).charge>0) countPiPlus++;
+           if (recop.at(recind.at(i)).charge<0) countPiMinus++;
+
+           TLorentzVector Comb;
+           Comb=tlvSeed;
+
+           // Lets find other pions around it! (it would be better to start with
+           // a collection already cleaned, and to make sure I do not reuse
+           // tracks/photons)
+          std::vector<int> foundP;
+           foundP.clear();
+
+           TLorentzVector Annulus(0,0,0,0);
+           int recopInIsoAnnulus=0;
+ 
+
+           // Caution: the recop are not ordered in pt. Next step, order and then cluster. 
+
+           for (size_t j = i+1; j < recind.size(); j++) {       
+                   if ( fabs(mc.at(mcind.at(j)).PDG)==11 || fabs(mc.at(mcind.at(j)).PDG)==13 ) continue;
+
+                   // The following is a hack. I found cases
+                   // of the same recoparticle matched to two genParticles - recoInd returns the same
+                   // for  both. This makes me double count. All this loop should be done
+                   // better and forgetting the MC. To be doublechecked.
+
+                   bool haveIMetYou=false;
+                   for (int k=0; k<foundP.size(); k++) { 
+                                if (recind.at(j)==recind.at(foundP.at(k))) {
+                                haveIMetYou=true; 
+                  }}
+
+                   if ( haveIMetYou) 
+                        continue;
+                  
+                   TLorentzVector findP;    
+                   findP.SetXYZM(recop.at(recind.at(j)).momentum.x, recop.at(recind.at(j)).momentum.y, recop.at(recind.at(j)).momentum.z, recop.at(recind.at(j)).mass);
+        
+                   // Check Angle. By Hand, better do it with a nice function.
+                   double DTheta = findP.Theta()-tlvSeed.Theta();
+                   double DPhi = findP.Phi() - tlvSeed.Phi();
+                   if (DPhi>M_PI) DPhi=2*M_PI-DPhi;
+                   double DR= sqrt(DTheta*DTheta+DPhi*DPhi);
+
+                   if (DR<0.5 and DR>=0.1) { // Let's do some sort of isolation. Eventually, move to doing this inside a jet 
+                        recopInIsoAnnulus++;                            
+                        Annulus+=findP;
+
+
+                  }
+
+                   if ( recop.at(recind.at(j)).charge==0) continue;  // Now only charged.  Caution: iso also counts photons. Do this better!
+        
+                   if (DR>0.1) continue ; // This is for the actual tau. Is this too little? How collimated are the decay products? Can we use  0.05? 
+                                          // Note ILC uses deltaTheta, cos Theta = 0.99
+                                          // for the tau, and cos Theta = 0.95 for the
+                                          // Isolation
+
+                   Comb+=findP;
+
+                   if (recop.at(recind.at(j)).charge>0) countPiPlus++;
+                   if (recop.at(recind.at(j)).charge<0) countPiMinus++;
+                   //if (recop.at(recind.at(j)).charge==0) countPhotons++;
+
+                   foundP.push_back(j);
+            }
+
+            // For now, only pions->photon+photon. It would be better to assume one of the
+            // photons can be lost (but better check that in the pion function (which
+            // needs improvement!)
+
+            for (size_t pi0=0; pi0<pi0s.size(); pi0++){
+                  TLorentzVector findP;
+                  findP.SetXYZM(pi0s.at(pi0).momentum.x, pi0s.at(pi0).momentum.y, pi0s.at(pi0).momentum.z, pi0s.at(pi0).mass);
+
+                   // Check Angle. By Hand, better do it with a nice function.
+                   double DTheta = findP.Theta()-tlvSeed.Theta();
+                   double DPhi = findP.Phi() - tlvSeed.Phi();
+                   if (DPhi>M_PI) DPhi=2*M_PI-DPhi;
+                   double DR= sqrt(DTheta*DTheta+DPhi*DPhi);
+
+                   if (DR>0.1) continue ; // Is this too little? Do we need the same angle  for charged and photons ?
+
+                   Comb+=findP;
+
+                   countPions++;
+        
+            }   
+
+          if (  abs(countPiPlus-countPiMinus )!=1 ) {
+                //std::cout<<" Does not meet charge requirement!"<<std::endl;
+                continue ; // Before ID, lets check the total charge to clean up a little
+          }
+          int type=-1;
+          if( (countPiPlus+countPiMinus)==1 && countPions==0) type=0;
+          if( (countPiPlus+countPiMinus)==1 && countPions==1) type=1;
+          if( (countPiPlus+countPiMinus)==1 && countPions>=2) type=2;
+          if( (countPiPlus+countPiMinus)==3 && countPions==0) type=10;
+          if( (countPiPlus+countPiMinus)==3 && countPions>0)  type=11;
+          // The numbers follow CMS a little bit (not fully)
+
+        
+          edm4hep::ReconstructedParticleData partMod; // =recop.at(recind.at(i));
+          partMod.momentum.x=Comb.Px();
+          partMod.momentum.y=Comb.Py();
+          partMod.momentum.z=Comb.Pz();
+          partMod.mass= Comb.M();
+          partMod.charge= (countPiPlus-countPiMinus);
+
+          partMod.type = type;
+
+          if (Comb.Pt() <5) continue; // Heavy cleaning to get things going
+          if ( Annulus.Pt() / Comb.Pt() > 1  ) continue ; // Better tune this. For now, if  there is more energy around the tau than 'in' the tau, or if there are a lot of tracks, this is something else
+          if (partMod.mass>2) continue ; // more cleaning
+
+          partMod.goodnessOfPID = Annulus.Pt()/Comb.Pt(); // test at a poorman  isolation. To be done better.
+
+
+          collection.push_back(partMod);       
+           }
+
+           return collection ;
+}
+   
+
+/*ROOT::VecOps::RVec< edm4hep::ReconstructedParticleData> SortByIso(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> recop){
+
+           std::sort(recop.begin(), recop.end(), collsortIsoTau);
+
+           return recop;
+}
+*/
+
+
+
 }//end NS myUtils
 
 }//end NS FCCAnalyses

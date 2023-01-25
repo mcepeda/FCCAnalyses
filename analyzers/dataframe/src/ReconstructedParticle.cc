@@ -366,6 +366,15 @@ get_type(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> in){
   return result;
 }
 
+ROOT::VecOps::RVec<int>
+get_PID(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> in){
+  ROOT::VecOps::RVec<int> result;
+  for (auto & p: in) {
+    result.push_back(p.goodnessOfPID);
+  }
+  return result;
+}
+
 
 int get_n(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> x) {
   int result =  x.size();
