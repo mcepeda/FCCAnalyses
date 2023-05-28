@@ -2558,23 +2558,40 @@ ROOT::VecOps::RVec< edm4hep::ReconstructedParticleData> TauRecoTest(ROOT::VecOps
 
 ROOT::VecOps::RVec< edm4hep::ReconstructedParticleData> findTauInJet (const ROOT::VecOps::RVec< FCCAnalyses::JetConstituentsUtils::FCCAnalysesJetConstituents   >& jets){
 
+       // Identify taus by starting from a jet. An alternative is starting directly from reconstructed particles (to be tested more deeply in the future). 
+       // This algorithm requires first building a jet (base example is clustering_ee_kt(2, 4, 1, 0) , we have tested with several configurations) from con 
+       // Then loop over the constituents: identify a seed, and count pions (neutral and charged) and photons to a) build a tau candidate b) be able to identify it
+
        ROOT::VecOps::RVec< edm4hep::ReconstructedParticleData> out;
 
- //      std::cout<<"LOOPING OVER JETS"<<std::endl;
+       // Loop over jets:
+       
        for (int i = 0; i < jets.size(); ++i) {
+
         TLorentzVector sum_tau; // initialized by (0., 0., 0., 0.)
         FCCAnalyses::JetConstituentsUtils::FCCAnalysesJetConstituents jcs = jets.at(i);
         int tauID=-1;
         int count_piP=0, count_piM=0, count_nu=0, count_pho=0;
 
-        // Find Lead (This needs to change to first sort the jcs)
+        // Find Lead (This needs to change to first sort the jcs by p or pt, it is very messy right now)
+         
         TLorentzVector lead;
         lead.SetPxPyPzE(0,0,0,0);
         int chargeLead=0;
 
+        // Eventually the FCC sw should have better ID for the particles, based on the detector. 
+        // For the moment I compare the reconstructed  masses and charges to known values
+        // (since that is what the PID module as references does). This is something to be improved in the future! 
+        // Too truth-based.
+
+
+        // First loop just to find the lead (not very efficient). 
         for (const auto& jc : jcs) {
+
+           // I want the lead particle to be charged
            if (jc.charge==0) continue;
           
+           // No electrons or muons
             if(  fabs(jc.mass -  0.105658) < 1.e-03) {
                         tauID=-13;
                         continue;
@@ -2583,38 +2600,41 @@ ROOT::VecOps::RVec< edm4hep::ReconstructedParticleData> findTauInJet (const ROOT
                         tauID=-11; continue;
              }
 
+           // Anything else lets: find the highest pt one 
            if ((jc.momentum.x*jc.momentum.x+jc.momentum.y*jc.momentum.y)>lead.Pt()){
                         lead.SetPxPyPzE(jc.momentum.x, jc.momentum.y, jc.momentum.z, jc.energy);
                         chargeLead=jc.charge;
            }
          }
 
-
-//        TLorentzVector jet;
-//        jet.SetPxPyPzE(jets.at(i).momentum.x, jets.at(i).momentum.y, jets.at(i).momentum.z, jets.at(i).energy);
- 
         //std::cout<<"Jet? "<<i<<std::endl;
         //std::cout<<"Lead? "<<lead.Pt()<<"   "<<lead.Phi()<<"  "<<lead.Theta()<<std::endl;
+     
+        // Clean and start counting
         if (lead.Pt()<2) continue; // Too low pt 
         if (chargeLead==1) count_piP++;
         else if (chargeLead==-1) count_piM++;
         else {continue;} // This cannot happen 
-
         sum_tau+=lead;
 
+
+        // Now I loop to build the tau adding candidates to the lead
+        // Only if they satisfy some conditions: distance, charge, etc 
         for (const auto& jc : jcs) {
 
-          TLorentzVector tlv;
+          TLorentzVector tlv;  
           tlv.SetPxPyPzE(jc.momentum.x, jc.momentum.y, jc.momentum.z, jc.energy);
 
           if (tlv==lead) {
                         //std::cout<<"  skip lead "<<tlv.Pt()<<std::endl; 
                         continue;}
 
+          // Distance (in terms of Theta)
           double dTheta= fabs(sum_tau.Theta()-tlv.Theta());   
 
 //          std::cout<<"    cand?   " <<jc.mass<<"   "<<jc.type<<"   "<<tlv.Pt()<<"   "<<tlv.Phi()<<"   "<<tlv.Theta()<<"    "<<jc.charge<<"   "<<dTheta<<std::endl;//"  ->  "<<jet.Phi()-tlv.Phi()<<"  "<<jet.Theta()-tlv.Theta()<<std::endl;
 
+          // Skip Muons and Electrons. If there is a muon or electron, this is not an hadronic tau! Save for the ID
           if(  fabs(jc.mass -  0.105658) < 1.e-03) {
                         tauID=-13; 
                         continue;
@@ -2623,20 +2643,30 @@ ROOT::VecOps::RVec< edm4hep::ReconstructedParticleData> findTauInJet (const ROOT
                         tauID=-11; continue;
           }
 
+          // The Pt cut and Distance are parameters to tune in the future
           if (tlv.Pt()<1 || dTheta>0.20) {continue;} 
 
-//          if(  fabs(jc.mass - 0.13957)< 1.e-03 ) {  // This neglects Kaons!
+          //  if(  fabs(jc.mass - 0.13957)< 1.e-03 ) {  // I tested this and rejected it: I want the kaons, not only the pions
+          
+          // Now count! 
           if(jc.charge>0) count_piP++;    
           else if (jc.charge<0) count_piM++;   
           else  count_pho++;
 
 //          else if (jc.type == 22 ) count_pho++;
-//          else {count_nu++; continue;}  // I am not using this, should I?
+//          else {count_nu++; continue;}  // I am not distinguishing photons and pi0s. Could be tried in the future. 
 
-          sum_tau += tlv;
+          sum_tau += tlv;  // This is the 4 momenta of only the particles we have selected
 
         }
-           //std::cout<<" Count? "<<count_piP<<"   "<<count_piM<<"  "<<count_pho<<"   "<<count_pho<<std::endl;
+
+
+         // Now we have a tau candidate and its momentum (sum_tau).
+         // Lets build the ID : count the charged pions and the neutrals. 
+         // The charge of the tau must be +1 or -1. 
+         // Considering the decays of the tau: we want candidates with one or three charged candidates (one or three prongs) 
+         //std::cout<<" Count? "<<count_piP<<"   "<<count_piM<<"  "<<count_pho<<"   "<<count_pho<<std::endl;
+         // The ID number assigned is a bit dummy, helps to keep track of the kind of candidate we have (and see if we can be more restrictive)
 
          if (tauID!=-13 && tauID!=-11  && abs(count_piP-count_piM)==1 && ( (count_piP+count_piM)==1 || (count_piP+count_piM)==3) ){    
 
@@ -2660,6 +2690,7 @@ ROOT::VecOps::RVec< edm4hep::ReconstructedParticleData> findTauInJet (const ROOT
 
           //std::cout<<" -->  Tau? "<<tauID<<"    "<<count_piP-count_piM<<"   "<<sum_tau.Pt()<<"   "<<sum_tau.Phi()<<"    "<<sum_tau.Theta()<<"   "<<sum_tau.M()<<std::endl;
 
+          // Only save the tau if the ID makes sense, and if it has a reasonable mass (another parameter to tune)
           if (tauID!=-1){
             edm4hep::ReconstructedParticleData partMod; // =recop.at(recind.at(i));
             partMod.momentum.x=sum_tau.Px();
@@ -2668,14 +2699,11 @@ ROOT::VecOps::RVec< edm4hep::ReconstructedParticleData> findTauInJet (const ROOT
             partMod.mass= sum_tau.M();
             partMod.charge= (count_piP-count_piM);
             partMod.type = tauID;
-//            std::cout<<" -------->>  "<<partMod.type<<std::endl;
             if (tauID!=-1 && partMod.mass<3)  out.push_back(partMod);
  
           }
 
         }
-
-//        std::cout<<"END JETS"<<std::endl;
         return out;
 
 }
