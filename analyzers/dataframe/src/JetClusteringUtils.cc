@@ -139,6 +139,19 @@ namespace FCCAnalyses {
       return result;
     }
 
+    ROOT::VecOps::RVec<fastjet::PseudoJet>  jetsel_pt(const ROOT::VecOps::RVec<fastjet::PseudoJet>& in,float arg_min_pt){
+      ROOT::VecOps::RVec<fastjet::PseudoJet> result;
+      result.reserve(in.size());
+      for (auto& p : in) {
+                  if ( p.pt()> arg_min_pt) {
+                  result.emplace_back(p);
+       }
+      }
+      return result;
+     }
+
+
+
     JetClustering::FCCAnalysesJet initialise_FCCAnalysesJet() {
       JetClustering::FCCAnalysesJet result;
       std::vector<fastjet::PseudoJet> jets;

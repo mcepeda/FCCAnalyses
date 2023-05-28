@@ -8,6 +8,7 @@
 #include "FCCAnalyses/ReconstructedParticle.h"
 #include "FCCAnalyses/MCParticle.h"
 #include "FCCAnalyses/Algorithms.h"
+#include "FCCAnalyses/JetConstituentsUtils.h"
 
 namespace FCCAnalyses{
 
@@ -2199,9 +2200,9 @@ int has_anglethrust_emin(ROOT::VecOps::RVec<float> angle){
   return -1;
 }
 
-
-ROOT::VecOps::RVec<TLorentzVector> VisGenP4(ROOT::RVec<Int_t> subset_indices, ROOT::RVec<edm4hep::MCParticleData> particles, ROOT::RVec<Int_t> daughter_indices, bool printIt=false) {
-        ROOT::VecOps::RVec<TLorentzVector> VisColl;
+// IT MAKES NO SENSE TO DO THE LOOP TWICE - CHANGE !!! CLEAN!!!
+ROOT::VecOps::RVec<int> GenTauType(ROOT::RVec<Int_t> subset_indices, ROOT::RVec<edm4hep::MCParticleData> particles, ROOT::RVec<Int_t> daughter_indices, bool printIt=false) {
+        ROOT::VecOps::RVec<int> idColl;
 
         unsigned int nsel = subset_indices.size();
 
@@ -2210,34 +2211,97 @@ ROOT::VecOps::RVec<TLorentzVector> VisGenP4(ROOT::RVec<Int_t> subset_indices, RO
             bool parent_found = false;
             unsigned int index = subset_indices[i];
 
-            TLorentzVector VisTau(0,0,0,0);
-
             if (abs(particles.at(index).PDG) != 15) { 
-                VisColl.push_back(VisTau); continue;} // Why are you even here?
+                idColl.push_back(-999); continue;} // Why are you even here?
+
+            int db = particles.at(index).daughters_begin ;
+            int de = particles.at(index).daughters_end;
+            int count_piP=0, count_piM=0, nneutral=0;
+            int idTau=-1;
+            for (int id = db; id < de; id++) {                    
+                       if( abs(particles.at(daughter_indices.at(id)).PDG) == 15 ) {idTau=-15; continue;} //  Careful, if this happens, I should not be here          
+                       if( abs(particles.at(daughter_indices.at(id)).PDG) == 11 ) {idTau=-11; continue;} //  Careful, if this happens, I should not be here          
+                       if( abs(particles.at(daughter_indices.at(id)).PDG) == 13 ) {idTau=-13; continue;} //  Careful, if this happens, I should not be here          
+
+                       if( abs(particles.at(daughter_indices.at(id)).PDG) >=11 && abs(particles.at(daughter_indices.at(id)).PDG) <=16 ) continue; //    Maybe I should go deeper...     
+
+                       if ( particles.at(daughter_indices.at(id)).charge > 0) count_piP++;
+                       if ( particles.at(daughter_indices.at(id)).charge < 0) count_piM++;
+                       if ( particles.at(daughter_indices.at(id)).charge == 0) nneutral++;
+
+
+                   }        
+            if( (count_piP+count_piM)==1 && nneutral==0) idTau=0;
+            if( (count_piP+count_piM)==1 && nneutral==1) idTau=1;
+            if( (count_piP+count_piM)==1 && nneutral==2) idTau=2;
+            if( (count_piP+count_piM)==1 && nneutral>=3) idTau=3;
+
+            if( (count_piP+count_piM)==3 && nneutral==0)  idTau=10;
+            if( (count_piP+count_piM)==3 && nneutral==1)  idTau=11;
+            if( (count_piP+count_piM)==3 && nneutral==2)  idTau=12;
+            if( (count_piP+count_piM)==3 && nneutral>=3)  idTau=13;
+
+//            std::cout<<" ---> ID? "<<i<<"   "<<idTau<<std::endl;
+            idColl.push_back(idTau);
+
+        }
+        return idColl;
+}
+
+
+
+
+
+
+ROOT::VecOps::RVec<TLorentzVector> VisGenP4(ROOT::RVec<Int_t> subset_indices, ROOT::RVec<edm4hep::MCParticleData> particles, ROOT::RVec<Int_t> daughter_indices, bool printIt=false) {
+        ROOT::VecOps::RVec<TLorentzVector> VisColl;
+
+        unsigned int nsel = subset_indices.size();
+
+//        std::cout<<std::endl;
+//        std::cout<<"LOOPING OVER GEN"<<std::endl;
+
+        for (unsigned int i=0; i<nsel; ++i) {
+
+            bool parent_found = false;
+            unsigned int index = subset_indices[i];
+
+            TLorentzVector VisTau(0,0,0,0);
 
             int db = particles.at(index).daughters_begin ;
             int de = particles.at(index).daughters_end;
 
             TLorentzVector  partM(particles.at(index).momentum.x,particles.at(index).momentum.y,particles.at(index).momentum.z,particles.at(index).mass);
 
-            for (int id = db; id < de; id++) {                    
-    
-                       if( abs(particles.at(daughter_indices.at(id)).PDG) == 15 ) continue; //  Careful, if this happens, I should not be here          
-                       if( abs(particles.at(daughter_indices.at(id)).PDG) >=11 && abs(particles.at(daughter_indices.at(id)).PDG) <=16 ) continue; //    Maybe I should go deeper...     
+    //        std::cout<<"Gen? "<<particles.at(index).PDG<<"   "<<particles.at(index).generatorStatus<<"    "<<partM.Pt()<<"   "<<partM.Phi()<<"   "<<partM.Theta()<<std::endl;
 
+            if (abs(particles.at(index).PDG) != 15) {
+                VisColl.push_back(VisTau); continue;} // Why are you even here?
+
+
+
+            for (int id = db; id < de; id++) {                    
                        TLorentzVector part;
-                        part.SetXYZM(particles.at(daughter_indices[id]).momentum.x,particles.at(daughter_indices[id]).momentum.y,particles.at(daughter_indices[id]).momentum.z,particles.at(daughter_indices[id]).mass);
-                
+                       part.SetXYZM(particles.at(daughter_indices[id]).momentum.x,particles.at(daughter_indices[id]).momentum.y,particles.at(daughter_indices[id]).momentum.z,particles.at(daughter_indices[id]).mass);
+  //                     std::cout<<"   dau "<<particles.at(daughter_indices.at(id)).PDG<<" -->"<<part.Pt()<<"   "<<part.Phi()<<"   "<<part.Theta()<<std::endl;
+
+                       if( abs(particles.at(daughter_indices.at(id)).PDG) == 15 ) continue; //  Careful, if this happens, I should not be here          
+                       if( abs(particles.at(daughter_indices.at(id)).PDG) ==12 || abs(particles.at(daughter_indices.at(id)).PDG) ==14 || abs(particles.at(daughter_indices.at(id)).PDG) ==16 ) continue; //    Maybe I should go deeper...     
+
                        VisTau+=part;
 
                    }        
+//                       std::cout<<"   VIS? "<<VisTau.Pt()<<"   "<<VisTau.Phi()<<"   "<<VisTau.Theta()<<std::endl<<std::endl;
 
             VisColl.push_back(VisTau);
 
         }
-        if (printIt) printf("\\n");
+      //  std::cout<<"END GEN"<<std::endl; 
         return VisColl;
 }
+
+
+
 
 ROOT::VecOps::RVec< edm4hep::ReconstructedParticleData> MakePi0Test(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> recop, double DRMAX_=0.5){
 
@@ -2331,12 +2395,14 @@ ROOT::VecOps::RVec< edm4hep::ReconstructedParticleData> TauRecoTest(ROOT::VecOps
 
            // They are not ordered by Pt! They should be...
 
+           bool thisisamuon_or_electron=false;
+
            for (size_t i = 0; i < recind.size(); i++) {
            // Some cleaning, I cannot see anything otherwise:
            if (  sqrt ( recop.at(recind.at(i)).momentum.x*recop.at(recind.at(i)).momentum.x + recop.at(recind.at(i)).momentum.y * recop.at(recind.at(i)).momentum.y ) <1 ) continue;
 
            // This should be done in a better way, not looking at PDGID
-           if ( fabs(mc.at(mcind.at(i)).PDG)==11 || fabs(mc.at(mcind.at(i)).PDG)==13 ) continue;
+           if ( fabs(mc.at(mcind.at(i)).PDG)==11 || fabs(mc.at(mcind.at(i)).PDG)==13 ) { thisisamuon_or_electron=true; continue;}
 
            // Only charged hadrons 
            if ( recop.at(recind.at(i)).charge == 0) continue;  
@@ -2399,8 +2465,6 @@ ROOT::VecOps::RVec< edm4hep::ReconstructedParticleData> TauRecoTest(ROOT::VecOps
                    if (DR<0.5 and DR>=0.1) { // Let's do some sort of isolation. Eventually, move to doing this inside a jet 
                         recopInIsoAnnulus++;                            
                         Annulus+=findP;
-
-
                   }
 
                    if ( recop.at(recind.at(j)).charge==0) continue;  // Now only charged.  Caution: iso also counts photons. Do this better!
@@ -2418,11 +2482,16 @@ ROOT::VecOps::RVec< edm4hep::ReconstructedParticleData> TauRecoTest(ROOT::VecOps
 
                    foundP.push_back(j);
             }
+         
+            if (thisisamuon_or_electron ) continue;
+
 
             // For now, only pions->photon+photon. It would be better to assume one of the
             // photons can be lost (but better check that in the pion function (which
             // needs improvement!)
 
+            // THIS NEEDS TO CHANGE :). Lets simplify --> photons 
+            // Also, check differences in neutral particles
             for (size_t pi0=0; pi0<pi0s.size(); pi0++){
                   TLorentzVector findP;
                   findP.SetXYZM(pi0s.at(pi0).momentum.x, pi0s.at(pi0).momentum.y, pi0s.at(pi0).momentum.z, pi0s.at(pi0).mass);
@@ -2441,14 +2510,16 @@ ROOT::VecOps::RVec< edm4hep::ReconstructedParticleData> TauRecoTest(ROOT::VecOps
         
             }   
 
+      
+
           if (  abs(countPiPlus-countPiMinus )!=1 ) {
                 //std::cout<<" Does not meet charge requirement!"<<std::endl;
                 continue ; // Before ID, lets check the total charge to clean up a little
           }
           int type=-1;
           if( (countPiPlus+countPiMinus)==1 && countPions==0) type=0;
-          if( (countPiPlus+countPiMinus)==1 && countPions==1) type=1;
-          if( (countPiPlus+countPiMinus)==1 && countPions>=2) type=2;
+          if( (countPiPlus+countPiMinus)==1 && countPions>0) type=1;
+//          if( (countPiPlus+countPiMinus)==1 && countPions>=2) type=2;
           if( (countPiPlus+countPiMinus)==3 && countPions==0) type=10;
           if( (countPiPlus+countPiMinus)==3 && countPions>0)  type=11;
           // The numbers follow CMS a little bit (not fully)
@@ -2484,6 +2555,195 @@ ROOT::VecOps::RVec< edm4hep::ReconstructedParticleData> TauRecoTest(ROOT::VecOps
            return recop;
 }
 */
+
+ROOT::VecOps::RVec< edm4hep::ReconstructedParticleData> findTauInJet (const ROOT::VecOps::RVec< FCCAnalyses::JetConstituentsUtils::FCCAnalysesJetConstituents   >& jets){
+
+       ROOT::VecOps::RVec< edm4hep::ReconstructedParticleData> out;
+
+ //      std::cout<<"LOOPING OVER JETS"<<std::endl;
+       for (int i = 0; i < jets.size(); ++i) {
+        TLorentzVector sum_tau; // initialized by (0., 0., 0., 0.)
+        FCCAnalyses::JetConstituentsUtils::FCCAnalysesJetConstituents jcs = jets.at(i);
+        int tauID=-1;
+        int count_piP=0, count_piM=0, count_nu=0, count_pho=0;
+
+        // Find Lead (This needs to change to first sort the jcs)
+        TLorentzVector lead;
+        lead.SetPxPyPzE(0,0,0,0);
+        int chargeLead=0;
+
+        for (const auto& jc : jcs) {
+           if (jc.charge==0) continue;
+          
+            if(  fabs(jc.mass -  0.105658) < 1.e-03) {
+                        tauID=-13;
+                        continue;
+             }
+             if (fabs(jc.mass-0.000510999)<  1.e-05 ) {
+                        tauID=-11; continue;
+             }
+
+           if ((jc.momentum.x*jc.momentum.x+jc.momentum.y*jc.momentum.y)>lead.Pt()){
+                        lead.SetPxPyPzE(jc.momentum.x, jc.momentum.y, jc.momentum.z, jc.energy);
+                        chargeLead=jc.charge;
+           }
+         }
+
+
+//        TLorentzVector jet;
+//        jet.SetPxPyPzE(jets.at(i).momentum.x, jets.at(i).momentum.y, jets.at(i).momentum.z, jets.at(i).energy);
+ 
+        //std::cout<<"Jet? "<<i<<std::endl;
+        //std::cout<<"Lead? "<<lead.Pt()<<"   "<<lead.Phi()<<"  "<<lead.Theta()<<std::endl;
+        if (lead.Pt()<2) continue; // Too low pt 
+        if (chargeLead==1) count_piP++;
+        else if (chargeLead==-1) count_piM++;
+        else {continue;} // This cannot happen 
+
+        sum_tau+=lead;
+
+        for (const auto& jc : jcs) {
+
+          TLorentzVector tlv;
+          tlv.SetPxPyPzE(jc.momentum.x, jc.momentum.y, jc.momentum.z, jc.energy);
+
+          if (tlv==lead) {
+                        //std::cout<<"  skip lead "<<tlv.Pt()<<std::endl; 
+                        continue;}
+
+          double dTheta= fabs(sum_tau.Theta()-tlv.Theta());   
+
+//          std::cout<<"    cand?   " <<jc.mass<<"   "<<jc.type<<"   "<<tlv.Pt()<<"   "<<tlv.Phi()<<"   "<<tlv.Theta()<<"    "<<jc.charge<<"   "<<dTheta<<std::endl;//"  ->  "<<jet.Phi()-tlv.Phi()<<"  "<<jet.Theta()-tlv.Theta()<<std::endl;
+
+          if(  fabs(jc.mass -  0.105658) < 1.e-03) {
+                        tauID=-13; 
+                        continue;
+          }  
+          if (fabs(jc.mass-0.000510999)<  1.e-05 ) {
+                        tauID=-11; continue;
+          }
+
+          if (tlv.Pt()<1 || dTheta>0.20) {continue;} 
+
+//          if(  fabs(jc.mass - 0.13957)< 1.e-03 ) {  // This neglects Kaons!
+          if(jc.charge>0) count_piP++;    
+          else if (jc.charge<0) count_piM++;   
+          else  count_pho++;
+
+//          else if (jc.type == 22 ) count_pho++;
+//          else {count_nu++; continue;}  // I am not using this, should I?
+
+          sum_tau += tlv;
+
+        }
+           //std::cout<<" Count? "<<count_piP<<"   "<<count_piM<<"  "<<count_pho<<"   "<<count_pho<<std::endl;
+
+         if (tauID!=-13 && tauID!=-11  && abs(count_piP-count_piM)==1 && ( (count_piP+count_piM)==1 || (count_piP+count_piM)==3) ){    
+
+            if( (count_piP+count_piM)==1 && count_pho==0) tauID=0;
+            if( (count_piP+count_piM)==1 && count_pho==1) tauID=1;
+            if( (count_piP+count_piM)==1 && count_pho==2) tauID=2;
+            if( (count_piP+count_piM)==1 && count_pho==3) tauID=3;
+            if( (count_piP+count_piM)==1 && count_pho==4) tauID=4;
+            if( (count_piP+count_piM)==1 && count_pho==5) tauID=5;
+            if( (count_piP+count_piM)==1 && count_pho>=6) tauID=6;
+
+            if( (count_piP+count_piM)==3 && count_pho==0)  tauID=10;
+            if( (count_piP+count_piM)==3 && count_pho==1)  tauID=11;
+            if( (count_piP+count_piM)==3 && count_pho==2)  tauID=12;
+            if( (count_piP+count_piM)==3 && count_pho==3)  tauID=13;
+            if( (count_piP+count_piM)==3 && count_pho==4)  tauID=14;
+            if( (count_piP+count_piM)==3 && count_pho==5)  tauID=15;
+            if( (count_piP+count_piM)==3 && count_pho>=6)  tauID=16;
+
+          }
+
+          //std::cout<<" -->  Tau? "<<tauID<<"    "<<count_piP-count_piM<<"   "<<sum_tau.Pt()<<"   "<<sum_tau.Phi()<<"    "<<sum_tau.Theta()<<"   "<<sum_tau.M()<<std::endl;
+
+          if (tauID!=-1){
+            edm4hep::ReconstructedParticleData partMod; // =recop.at(recind.at(i));
+            partMod.momentum.x=sum_tau.Px();
+            partMod.momentum.y=sum_tau.Py();
+            partMod.momentum.z=sum_tau.Pz();
+            partMod.mass= sum_tau.M();
+            partMod.charge= (count_piP-count_piM);
+            partMod.type = tauID;
+//            std::cout<<" -------->>  "<<partMod.type<<std::endl;
+            if (tauID!=-1 && partMod.mass<3)  out.push_back(partMod);
+ 
+          }
+
+        }
+
+//        std::cout<<"END JETS"<<std::endl;
+        return out;
+}
+
+
+
+  ROOT::VecOps::RVec<int> TauID2(const ROOT::VecOps::RVec< FCCAnalyses::JetConstituentsUtils::FCCAnalysesJetConstituents   >& jets){
+      ROOT::VecOps::RVec<int> out;
+      for (int i = 0; i < jets.size(); ++i) {
+        TLorentzVector sum_tau; // initialized by (0., 0., 0., 0.)
+        FCCAnalyses::JetConstituentsUtils::FCCAnalysesJetConstituents jcs = jets.at(i);
+
+            int tauID=-1;
+            int count_piP=0, count_piM=0, count_nu=0, count_pho=0;
+
+        
+
+
+
+        for (const auto& jc : jcs) {
+         
+//        why is the type only set for 22 and 130? (see JetConstituents). To be fixed.
+//        Copying the mass check from JetConstituents:
+          if(  fabs(jc.mass -  0.105658) < 1.e-03) {
+                        tauID=-13; 
+                        continue;
+                        // better to do this some other way, more RDF like (only check those with no muons, etc)
+          }  
+          if (fabs(jc.mass-0.000510999)<  1.e-05 ) {
+                        tauID=-11;
+                        continue;
+                        // better to do this some other way, more RDF like (only check those with no muons, etc)
+          }
+          TLorentzVector tlv;
+          tlv.SetPxPyPzE(jc.momentum.x, jc.momentum.y, jc.momentum.z, jc.energy);
+
+          if (tlv.Pt()<1) {continue;}
+
+          if(jc.charge>0) count_piP++;
+          else if (jc.charge<0) count_piM++;
+          else if (jc.type == 22 ) count_pho++;
+          else {count_nu++; continue;}
+
+          sum_tau += tlv;
+
+        }
+         if (tauID!=-13 && tauID!=-11 && abs(count_piP-count_piM)==1 &&  ((count_piP+count_piM)==1 || (count_piP+count_piM)==3)){
+
+          if( (count_piP+count_piM)==1 && count_pho==0) tauID=0;
+          if( (count_piP+count_piM)==1 && count_pho==1) tauID=1;
+          if( (count_piP+count_piM)==1 && count_pho==2) tauID=2;
+          if( (count_piP+count_piM)==1 && count_pho==3) tauID=3;
+          if( (count_piP+count_piM)==1 && count_pho==4) tauID=4;
+          if( (count_piP+count_piM)==1 && count_pho==5) tauID=5;
+          if( (count_piP+count_piM)==1 && count_pho>=6) tauID=6;
+
+          if( (count_piP+count_piM)==3 && count_pho==0)  tauID=10;
+          if( (count_piP+count_piM)==3 && count_pho==1)  tauID=11;        
+          if( (count_piP+count_piM)==3 && count_pho==2)  tauID=12;
+          if( (count_piP+count_piM)==3 && count_pho==3)  tauID=13;
+          if( (count_piP+count_piM)==3 && count_pho==4)  tauID=14;
+          if( (count_piP+count_piM)==3 && count_pho==5)  tauID=15;
+          if( (count_piP+count_piM)==3 && count_pho>=6)  tauID=16;
+        }
+
+          out.push_back(tauID); 
+      }
+      return out;
+    }
 
 
 
