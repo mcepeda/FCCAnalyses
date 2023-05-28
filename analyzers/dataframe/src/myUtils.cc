@@ -2677,6 +2677,7 @@ ROOT::VecOps::RVec< edm4hep::ReconstructedParticleData> findTauInJet (const ROOT
 
 //        std::cout<<"END JETS"<<std::endl;
         return out;
+
 }
 
 
