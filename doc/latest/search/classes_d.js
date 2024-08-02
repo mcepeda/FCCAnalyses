@@ -1,7 +1,6 @@
 var searchData=
 [
-  ['valenciabriefjet_0',['ValenciaBriefJet',['../classcontrib_1_1_valencia_brief_jet.html',1,'contrib']]],
-  ['valenciainfo_1',['ValenciaInfo',['../classcontrib_1_1_valencia_info.html',1,'contrib']]],
-  ['valenciaplugin_2',['ValenciaPlugin',['../classcontrib_1_1_valencia_plugin.html',1,'contrib']]],
-  ['varinfo_3',['VarInfo',['../struct_f_c_c_analyses_1_1_weaver_interface_1_1_preprocess_params_1_1_var_info.html',1,'FCCAnalyses::WeaverInterface::PreprocessParams']]]
+  ['thrustfit_0',['thrustFit',['../struct_f_c_c_analyses_1_1_algorithms_1_1thrust_fit.html',1,'FCCAnalyses::Algorithms']]],
+  ['tmva_5fhelper_5fxgb_1',['tmva_helper_xgb',['../classtmva__helper__xgb.html',1,'']]],
+  ['tmvahelperxgb_2',['TMVAHelperXGB',['../class_t_m_v_a_helper_1_1_t_m_v_a_helper_x_g_b.html',1,'TMVAHelper']]]
 ];
