@@ -10,7 +10,7 @@ var searchData=
   ['var_5finfo_5fmap_7',['var_info_map',['../struct_weaver_interface_1_1_preprocess_params.html#a3ecb107c2650ca4e8bb5d4ff2e5ab834',1,'WeaverInterface::PreprocessParams']]],
   ['var_5fnames_8',['var_names',['../struct_weaver_interface_1_1_preprocess_params.html#a03a92e634483a0955167d0e6c30c2527',1,'WeaverInterface::PreprocessParams']]],
   ['variablepos_9',['variablepos',['../class_weaver_interface.html#a39ebe06a0defcffd5b2274c0bce83621',1,'WeaverInterface::variablePos()'],['../class_o_n_n_x_runtime.html#a5d01f9f503324cde9c6945da475ff8a7',1,'ONNXRuntime::variablePos()']]],
-  ['variables_10',['variables',['../class_t_m_v_a_helper_1_1_t_m_v_a_helper_x_g_b.html#a757dceefae43a4873f3284063241d4fe',1,'TMVAHelper.TMVAHelperXGB.variables'],['../namespace_f_c_c_analyses_1_1_jet_flavour_utils.html#a29235bca3eca009b858895f44443a813',1,'FCCAnalyses::JetFlavourUtils::Variables'],['../classjet_flavour_helper_1_1_jet_flavour_helper.html#a9d74a76dc715c6ef5a7a9f0aa33669d8',1,'jetFlavourHelper.JetFlavourHelper.variables']]],
+  ['variables_10',['variables',['../classjet_flavour_helper_1_1_jet_flavour_helper.html#a9d74a76dc715c6ef5a7a9f0aa33669d8',1,'jetFlavourHelper.JetFlavourHelper.variables'],['../namespace_f_c_c_analyses_1_1_jet_flavour_utils.html#a29235bca3eca009b858895f44443a813',1,'FCCAnalyses::JetFlavourUtils::Variables'],['../class_t_m_v_a_helper_1_1_t_m_v_a_helper_x_g_b.html#a757dceefae43a4873f3284063241d4fe',1,'TMVAHelper.TMVAHelperXGB.variables']]],
   ['variables_5fnames_5f_11',['variables_names_',['../class_weaver_interface.html#a7760db24a6e73f1c7bd994e60c950778',1,'WeaverInterface']]],
   ['varinfo_12',['varinfo',['../struct_weaver_interface_1_1_preprocess_params_1_1_var_info.html',1,'WeaverInterface::PreprocessParams::VarInfo'],['../struct_weaver_interface_1_1_preprocess_params_1_1_var_info.html#a1686577f13aeb4763ec3d28d464e86b5',1,'WeaverInterface::PreprocessParams::VarInfo::VarInfo(float imedian, float inorm_factor, float ireplace_inf_value, float ilower_bound, float iupper_bound, float ipad)'],['../struct_weaver_interface_1_1_preprocess_params_1_1_var_info.html#a184a01d0f7a33b77bd07019039b74ca5',1,'WeaverInterface::PreprocessParams::VarInfo::VarInfo()']]],
   ['vec_5fb_13',['Vec_b',['../namespace_f_c_c_analyses.html#ab0f07b1d08c96453f90535457ea6c9a8',1,'FCCAnalyses']]],
@@ -37,5 +37,6 @@ var searchData=
   ['vertexingutils_2ecc_34',['VertexingUtils.cc',['../_vertexing_utils_8cc.html',1,'']]],
   ['vertexingutils_2eh_35',['VertexingUtils.h',['../_vertexing_utils_8h.html',1,'']]],
   ['vertexseed_5fbest_36',['VertexSeed_best',['../namespace_f_c_c_analyses_1_1_vertex_finder_l_c_f_i_plus.html#a76a26f41fcb17d11e5d78600df7ffcdd',1,'FCCAnalyses::VertexFinderLCFIPlus']]],
-  ['vtx_37',['vtx',['../struct_f_c_c_analyses_1_1_vertexing_utils_1_1_f_c_c_analyses_v0.html#aeb8d6a8ea2eb879c7eb67d3fe7cafcfa',1,'FCCAnalyses::VertexingUtils::FCCAnalysesV0']]]
+  ['visgenp4_37',['VisGenP4',['../namespace_f_c_c_analyses_1_1my_utils.html#a1752893cdd5ae4c39751882c52ce2409',1,'FCCAnalyses::myUtils']]],
+  ['vtx_38',['vtx',['../struct_f_c_c_analyses_1_1_vertexing_utils_1_1_f_c_c_analyses_v0.html#aeb8d6a8ea2eb879c7eb67d3fe7cafcfa',1,'FCCAnalyses::VertexingUtils::FCCAnalysesV0']]]
 ];

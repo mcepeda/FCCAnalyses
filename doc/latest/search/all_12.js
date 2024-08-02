@@ -36,8 +36,9 @@ var searchData=
   ['smearing_2eh_33',['Smearing.h',['../_smearing_8h.html',1,'']]],
   ['smearobjects_2ecc_34',['SmearObjects.cc',['../_smear_objects_8cc.html',1,'']]],
   ['smearobjects_2eh_35',['SmearObjects.h',['../_smear_objects_8h.html',1,'']]],
-  ['sphericityfit_36',['sphericityfit',['../struct_f_c_c_analyses_1_1_algorithms_1_1sphericity_fit.html#a024b324a41bea3f3c760fceb01f6f419',1,'FCCAnalyses::Algorithms::sphericityFit::sphericityFit()'],['../struct_f_c_c_analyses_1_1_algorithms_1_1sphericity_fit.html',1,'FCCAnalyses::Algorithms::sphericityFit']]],
-  ['start_37',['Quick start',['../index.html#autotoc_md1',1,'']]],
-  ['sum_5ftlv_5fconstituents_38',['sum_tlv_constituents',['../namespace_f_c_c_analyses_1_1_jet_constituents_utils.html#a27bc13971584b1eacbd2c416ee88c617',1,'FCCAnalyses::JetConstituentsUtils']]],
-  ['supress_5fstdout_39',['supress_stdout',['../namespace_f_c_c_analyses_1_1_vertex_fitter_simple.html#af1aa1405356a08a857aaeac336aba926',1,'FCCAnalyses::VertexFitterSimple']]]
+  ['sortbyiso_36',['SortByIso',['../namespace_f_c_c_analyses_1_1my_utils.html#a00fc1c1a762c145d311f944b258756f1',1,'FCCAnalyses::myUtils']]],
+  ['sphericityfit_37',['sphericityfit',['../struct_f_c_c_analyses_1_1_algorithms_1_1sphericity_fit.html#a024b324a41bea3f3c760fceb01f6f419',1,'FCCAnalyses::Algorithms::sphericityFit::sphericityFit()'],['../struct_f_c_c_analyses_1_1_algorithms_1_1sphericity_fit.html',1,'FCCAnalyses::Algorithms::sphericityFit']]],
+  ['start_38',['Quick start',['../index.html#autotoc_md1',1,'']]],
+  ['sum_5ftlv_5fconstituents_39',['sum_tlv_constituents',['../namespace_f_c_c_analyses_1_1_jet_constituents_utils.html#a27bc13971584b1eacbd2c416ee88c617',1,'FCCAnalyses::JetConstituentsUtils']]],
+  ['supress_5fstdout_40',['supress_stdout',['../namespace_f_c_c_analyses_1_1_vertex_fitter_simple.html#af1aa1405356a08a857aaeac336aba926',1,'FCCAnalyses::VertexFitterSimple']]]
 ];
