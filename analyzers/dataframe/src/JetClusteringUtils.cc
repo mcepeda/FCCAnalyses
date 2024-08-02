@@ -158,6 +158,19 @@ get_theta(const ROOT::VecOps::RVec<fastjet::PseudoJet> &in) {
   return result;
 }
 
+// To be removed , redundant function : 
+    ROOT::VecOps::RVec<fastjet::PseudoJet>  jetsel_pt(const ROOT::VecOps::RVec<fastjet::PseudoJet>& in,float arg_min_pt){
+      ROOT::VecOps::RVec<fastjet::PseudoJet> result;
+      result.reserve(in.size());
+      for (auto& p : in) {
+                  if ( p.pt()> arg_min_pt) {
+                  result.emplace_back(p);
+       }
+      }
+      return result;
+     }
+
+
 sel_pt::sel_pt(float arg_min_pt) : m_min_pt(arg_min_pt){};
 ROOT::VecOps::RVec<fastjet::PseudoJet>
 sel_pt::operator()(ROOT::VecOps::RVec<fastjet::PseudoJet> in) {
@@ -304,6 +317,7 @@ resonanceBuilder::operator()(ROOT::VecOps::RVec<fastjet::PseudoJet> legs) {
           TLorentzVector leg_lv;
           leg_lv.SetXYZM(legs[i].px(), legs[i].py(), legs[i].pz(), legs[i].m());
           reso_lv += leg_lv;
+
         }
       }
       result.emplace_back(reso_lv);

@@ -88,6 +88,10 @@ namespace FCCAnalyses {
     /** Get jet theta. Details. */
     ROOT::VecOps::RVec<float> get_theta(const ROOT::VecOps::RVec<fastjet::PseudoJet>& in);
 
+
+    /** Select Jets -- TO BE REMOVED; REDUNDANT **/
+    ROOT::VecOps::RVec<fastjet::PseudoJet>  jetsel_pt(const ROOT::VecOps::RVec<fastjet::PseudoJet>& in,float arg_min_pt);
+
     ///Select clustered jets with transverse momentum greader than a minimum value [GeV]
     struct sel_pt {
       sel_pt(float arg_min_pt);
