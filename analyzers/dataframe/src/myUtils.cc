@@ -1217,7 +1217,7 @@ ROOT::VecOps::RVec<edm4hep::TrackState> get_truetrack(ROOT::VecOps::RVec<int> in
 
     TVector3 momentum ( tlv.Px(),tlv.Py(),tlv.Pz());
 
-    TVectorD track_param = VertexFitterSimple::XPtoPar( vertexFB, momentum, charge );
+    TVectorD track_param = VertexingUtils::XPtoPar( vertexFB, momentum, charge );
 
 
     track.D0        = track_param[0] * 1e3 ; // from meters to mm
@@ -1269,7 +1269,7 @@ ROOT::VecOps::RVec<edm4hep::TrackState> get_pseudotrack(ROOT::VecOps::RVec<Verte
 
     TVector3 momentum ( pseudop.Px(),pseudop.Py(),pseudop.Pz());
 
-    TVectorD track_param = VertexFitterSimple::XPtoPar( vertexFB, momentum, pseudopq );
+    TVectorD track_param = VertexingUtils::XPtoPar( vertexFB, momentum, pseudopq );
 
 
     track.D0        = track_param[0] * 1e3 ; // from meters to mm
@@ -1314,7 +1314,7 @@ ROOT::VecOps::RVec<edm4hep::TrackState> getFCCAnalysesComposite_track(ROOT::VecO
 		       vertex.at(p.vertex).vertex.position.z * norm);
     TVector3 momentum ( p.particle.Px(),p.particle.Py(),p.particle.Pz());
 
-    TVectorD track_param = VertexFitterSimple::XPtoPar( vertexFB, momentum, p.charge );
+    TVectorD track_param = VertexingUtils::XPtoPar( vertexFB, momentum, p.charge );
 
 
     track.D0        = track_param[0] * 1e3 ; // from meters to mm

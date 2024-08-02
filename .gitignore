@@ -10,6 +10,10 @@ __pycache__/
 # ROOT files
 *.root
 
+# HTCondor
+# ignores <lxplus-username>.cc file in the top FCCAnalyses directory
+/*.cc
+
 # Editors
 *~
 .vimlocal
@@ -38,6 +42,7 @@ MANIFEST
 
 # Output
 outputs/
+BatchOutputs/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -96,3 +101,10 @@ venv.bak/
 
 # Benchmarking
 benchmark*json
+
+# Local configuration
+.fccana/*
+
+# Graphviz graphs
+*.dot
+*.png

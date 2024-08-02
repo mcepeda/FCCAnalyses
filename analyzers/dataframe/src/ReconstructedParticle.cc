@@ -1,10 +1,50 @@
 #include "FCCAnalyses/ReconstructedParticle.h"
+
+// std
+#include <cstdlib>
 #include <iostream>
+#include <stdexcept>
 
 namespace FCCAnalyses{
 
 namespace ReconstructedParticle{
 
+/// sel_type
+sel_type::sel_type(const int type) : m_type(type) {}
+
+ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> sel_type::operator()(
+    ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> in) {
+  ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> result;
+  result.reserve(in.size());
+  for (size_t i = 0; i < in.size(); ++i) {
+    if (in[i].type == m_type) {
+      result.emplace_back(in[i]);
+    }
+  }
+  return result;
+}
+
+/// sel_absType
+sel_absType::sel_absType(const int type) : m_type(type) {
+  if (m_type < 0) {
+    throw std::invalid_argument(
+        "ReconstructedParticle::sel_absType: Received negative value!");
+  }
+}
+
+ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> sel_absType::operator()(
+    ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> in) {
+  ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> result;
+  result.reserve(in.size());
+  for (size_t i = 0; i < in.size(); ++i) {
+    if (std::abs(in[i].type) == m_type) {
+      result.emplace_back(in[i]);
+    }
+  }
+  return result;
+}
+
+/// sel_pt
 sel_pt::sel_pt(float arg_min_pt) : m_min_pt(arg_min_pt) {};
 ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData>  sel_pt::operator() (ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> in) {
   ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> result;
@@ -17,6 +57,22 @@ ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData>  sel_pt::operator() (ROOT
   }
   return result;
 }
+
+sel_eta::sel_eta(float arg_min_eta) : m_min_eta(arg_min_eta) {};
+ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData>  sel_eta::operator() (ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> in) {
+  ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> result;
+  result.reserve(in.size());
+  for (size_t i = 0; i < in.size(); ++i) {
+    auto & p = in[i];
+    TLorentzVector tv1;
+    tv1.SetXYZM(p.momentum.x, p.momentum.y, p.momentum.z, p.mass);
+    if (abs(tv1.Eta()) < abs(m_min_eta)){
+      result.emplace_back(p);
+    }
+  }
+  return result;
+}
+
 
 sel_p::sel_p(float arg_min_p, float arg_max_p) : m_min_p(arg_min_p), m_max_p(arg_max_p)  {};
 ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData>  sel_p::operator() (ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> in) {

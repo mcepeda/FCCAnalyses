@@ -22,6 +22,8 @@ nCPUS = 2
 #produces ROOT TTrees, default is False
 doTree = False
 
+saveTabular = True
+
 ###Dictionnay of the list of cuts. The key is the name of the selection that will be added to the output file
 cutList = {"sel0":"Zcand_q == 0",
             "sel1":"Zcand_q == -1 || Zcand_q == 1",
@@ -42,4 +44,7 @@ histoList = {
     "leptonic_recoil_m_zoom4":{"name":"Zcand_recoil_m","title":"Z leptonic recoil [GeV]","bin":800,"xmin":120,"xmax":140},
     "leptonic_recoil_m_zoom5":{"name":"Zcand_recoil_m","title":"Z leptonic recoil [GeV]","bin":2000,"xmin":120,"xmax":140},
     "leptonic_recoil_m_zoom6":{"name":"Zcand_recoil_m","title":"Z leptonic recoil [GeV]","bin":100,"xmin":130.3,"xmax":132.5},
+    "mz_1D":{"cols":["Zcand_m"],"title":"m_{Z} [GeV]", "bins": [(40,80,100)]}, # 1D histogram (alternative syntax)
+    "mz_recoil_2D":{"cols":["Zcand_m", "Zcand_recoil_m"],"title":"m_{Z} - leptonic recoil [GeV]", "bins": [(40,80,100), (100,120,140)]}, # 2D histogram
+    "mz_recoil_3D":{"cols":["Zcand_m", "Zcand_recoil_m", "Zcand_recoil_m"],"title":"m_{Z} - leptonic recoil - leptonic recoil [GeV]", "bins": [(40,80,100), (100,120,140), (100,120,140)]}, # 3D histogram
 }
